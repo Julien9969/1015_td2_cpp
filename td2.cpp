@@ -69,9 +69,9 @@ void ajoutFilmDansListe(ListeFilms& listFilm, Film* film)
 		{
 			nouvelleListFilm[i] = listFilm.elements[i];
 		}
+		listFilm.capacite = listFilm.capacite * 2;
 		delete[]listFilm.elements;
 		listFilm.elements = nouvelleListFilm;
-		listFilm.capacite = listFilm.capacite * 2;
 	}
 	listFilm.elements[listFilm.nElements] = film;
 	listFilm.nElements++;
@@ -134,6 +134,7 @@ Acteur* lireActeur(istream& fichier, ListeFilms& listFilm)
 	{
 		cout << acteur.nom << endl;
 		acteur.joueDans.elements = new Film * [0];
+		
 		acteurTrouve = new Acteur;
 		*acteurTrouve = acteur;
 
@@ -194,7 +195,8 @@ void detruireFilm(ListeFilms& listFilm, int indexFilm)
 	enleverFilm(listFilm, film);
 	for (Acteur* acteur : span(film->acteurs.elements, film->acteurs.nElements))
 	{
-		if (acteur->joueDans.nElements == 1)
+		acteur->joueDans.nElements--;
+		if (acteur->joueDans.nElements == 0)
 		{
 			cout << acteur->nom << endl;
 			delete[] acteur->joueDans.elements;
@@ -248,10 +250,10 @@ void afficherListeFilms(const ListeFilms& listeFilms)
 	}
 }
 
-void afficherFilmographieActeur(const ListeFilms& listeFilms, const string& nomActeur)
+void afficherFilmographieActeur(ListeFilms& listeFilms, const string& nomActeur)
 {
 	//TODO: Utiliser votre fonction pour trouver l'acteur (au lieu de le mettre à nullptr).
-	const Acteur* acteur = nullptr;
+	const Acteur* acteur = trouverActeur(listeFilms, nomActeur);
 	if (acteur == nullptr)
 		cout << "Aucun acteur de ce nom" << endl;
 	else
@@ -309,7 +311,8 @@ int main()
 	//TODO: Afficher la liste des films.
 	afficherListeFilms(listeFilms);
 	//TODO: Faire les appels qui manquent pour avoir 0% de lignes non exécutées dans le programme (aucune ligne rouge dans la couverture de code; c'est normal que les lignes de "new" et "delete" soient jaunes).  Vous avez aussi le droit d'effacer les lignes du programmes qui ne sont pas exécutée, si finalement vous pensez qu'elle ne sont pas utiles.
-
+	cout << ligneDeSeparation << "Les films sont maintenant:" << endl;
+	afficherFilmographieActeur(listeFilms, "Daniel Craig");
 	//TODO: Détruire tout avant de terminer le programme.  La bibliothèque de verification_allocation devrait afficher "Aucune fuite detectee." a la sortie du programme; il affichera "Fuite detectee:" avec la liste des blocs, s'il manque des delete.
 	detruireListFilm(listeFilms);
 	cout << "c fini";
