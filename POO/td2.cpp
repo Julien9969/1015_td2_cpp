@@ -101,13 +101,13 @@ void ListeFilms::enleverFilm(Film* film)
 }
 
 //TODO: Une fonction pour trouver un Acteur par son nom dans une ListeFilms, qui retourne un pointeur vers l'acteur, ou nullptr si l'acteur n'est pas trouvé.  Devrait utiliser span.
-Acteur* trouverActeur(ListeFilms& listFilm, string nomActeur)
+Acteur* ListeFilms::trouverActeur(string nomActeur)
 {
-	if (listFilm.lireElements() == nullptr)
+	if (elements_ == nullptr)
 	{
 		return nullptr;
 	}
-	for (Film*& film : span(listFilm.lireElements(), listFilm.lire_nElement())) //voir les const
+	for (Film*& film : span(elements_, nElements_)) //voir les const
 	{
 		for (Acteur*& acteur : span(film->acteurs.elements, film->acteurs.nElements)) {
 
@@ -129,11 +129,11 @@ Acteur* lireActeur(istream& fichier, ListeFilms& listFilm)
 	acteur.anneeNaissance = lireUint16(fichier);
 	acteur.sexe = lireUint8(fichier);
 
-	Acteur* acteurTrouve = trouverActeur(listFilm, acteur.nom);
+	Acteur* acteurTrouve = listFilm.trouverActeur(acteur.nom);
 	if (acteurTrouve == nullptr)
 	{
 		cout << acteur.nom << endl;
-		acteur.joueDans.ajoutList(new Film * [0]);
+		acteur.joueDans.ajoutList(new Film * [1]);
 		
 		acteurTrouve = new Acteur;
 		*acteurTrouve = acteur;
@@ -178,8 +178,8 @@ ListeFilms creerListe(string nomFichier)
 
 	//TODO: Créer une liste de films vide.
 	ListeFilms listFilm = {};
-	listFilm.capacite = 0;
-	listFilm.nElements = 0;
+	listFilm.ajoutCapacite(0);
+	listFilm.ajout_nElement(0);
 
 	for (int i = 0; i < nElements; i++) {
 		listFilm.ajoutFilmDansListe(lireFilm(fichier, listFilm)); //TODO: Ajouter le film à la liste.
@@ -189,17 +189,17 @@ ListeFilms creerListe(string nomFichier)
 }
 
 //TODO: Une fonction pour détruire un film (relâcher toute la mémoire associée à ce film, et les acteurs qui ne jouent plus dans aucun films de la collection).  Noter qu'il faut enleve le film détruit des films dans lesquels jouent les acteurs.  Pour fins de débogage, affichez les noms des acteurs lors de leur destruction.
-void detruireFilm(ListeFilms& listFilm, int indexFilm)
+void ListeFilms::detruireFilm(int indexFilm)
 {
-	Film* film = listFilm.lireElements()[indexFilm];
-	listFilm.enleverFilm(film);
+	Film* film = elements_[indexFilm];
+	enleverFilm(film);
 	for (Acteur* acteur : span(film->acteurs.elements, film->acteurs.nElements))
 	{
-		acteur->joueDans.lire_nElement()--;
-		if (acteur->joueDans.nElements == 0)
+		acteur->joueDans--;
+		if (acteur->joueDans.lire_nElement() == 0)
 		{
 			cout << acteur->nom << endl;
-			delete[] acteur->joueDans.elements;
+			delete[] acteur->joueDans.lireElements();
 			delete acteur;
 		}
 	}
@@ -209,13 +209,13 @@ void detruireFilm(ListeFilms& listFilm, int indexFilm)
 
 //TODO: Une fonction pour détruire une ListeFilms et tous les films qu'elle contient.
 
-void detruireListFilm(ListeFilms& listFilm)
+void ListeFilms::detruireListFilm()
 {
-	for (int j : range(listFilm.nElements))
+	for (int j : range(nElements_))
 	{
-		detruireFilm(listFilm, 0);
+		detruireFilm(0);
 	}
-	delete[]listFilm.elements;
+	delete[]elements_;
 }
 
 void afficherActeur(const Acteur& acteur)
@@ -237,13 +237,13 @@ void afficherFilm(const Film* film)   // Demander si il faut afficher toutes les
 	}
 }
 
-void afficherListeFilms(const ListeFilms& listeFilms)
+void ListeFilms::afficherListeFilms() const
 {
 	//TODO: Utiliser des caractères Unicode pour définir la ligne de séparation (différente des autres lignes de séparations dans ce progamme).
 	static const string ligneDeSeparation2 = "\n\033[31m>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\033[0m\n";
 	cout << ligneDeSeparation2;
 	//TODO: Changer le for pour utiliser un span.
-	for (Film* film : span(listeFilms.elements, listeFilms.nElements)) {
+	for (Film* film : span(elements_, nElements_)) {
 		//TODO: Afficher le film.
 		afficherFilm(film);
 		cout << ligneDeSeparation2;
@@ -253,11 +253,11 @@ void afficherListeFilms(const ListeFilms& listeFilms)
 void afficherFilmographieActeur(ListeFilms& listeFilms, const string& nomActeur)
 {
 	//TODO: Utiliser votre fonction pour trouver l'acteur (au lieu de le mettre à nullptr).
-	const Acteur* acteur = trouverActeur(listeFilms, nomActeur);
+	const Acteur* acteur = listeFilms.trouverActeur(nomActeur);
 	if (acteur == nullptr)
 		cout << "Aucun acteur de ce nom" << endl;
 	else
-		afficherListeFilms(acteur->joueDans);
+		acteur->joueDans.afficherListeFilms();
 }
 
 int main()
@@ -277,15 +277,15 @@ int main()
 	//TODO: Afficher le premier film de la liste.  Devrait être Alien.
 	//cout << listeFilms.elements[0] << endl;
 
-	afficherFilm(listeFilms.elements[0]);
+	afficherFilm(listeFilms.lireElements()[0]);
 
 	cout << ligneDeSeparation << "Les films sont:" << endl;
 	//TODO: Afficher la liste des films.  Il devrait y en avoir 7.
 
-	afficherListeFilms(listeFilms);
+	listeFilms.afficherListeFilms();
 
 	//TODO: Modifier l'année de naissance de Benedict Cumberbatch pour être 1976 (elle était 0 dans les données lues du fichier).  Vous ne pouvez pas supposer l'ordre des films et des acteurs dans les listes, il faut y aller par son nom.
-	Acteur* ptrTemp = trouverActeur(listeFilms, "Benedict Cumberbatch");
+	Acteur* ptrTemp = listeFilms.trouverActeur("Benedict Cumberbatch");
 	//cout << ptrTemp->anneeNaissance << endl;
 	ptrTemp->anneeNaissance = 1976;
 	//cout << ptrTemp->anneeNaissance << endl;
@@ -296,12 +296,12 @@ int main()
 
 	cout << ligneDeSeparation << "Liste des films où Benedict Cumberbatch joue sont:" << endl;
 	//TODO: Afficher la liste des films où Benedict Cumberbatch joue.  Il devrait y avoir Le Hobbit et Le jeu de l'imitation.
-	afficherListeFilms(ptrTemp->joueDans);
+	ptrTemp->joueDans.afficherListeFilms();
 
 	//cout << ligneDeSeparation << tempActeur->nom << endl;
 	
 	//TODO: Détruire et enlever le premier film de la liste (Alien).  Ceci devrait "automatiquement" (par ce que font vos fonctions) détruire les acteurs Tom Skerritt et John Hurt, mais pas Sigourney Weaver puisqu'elle joue aussi dans Avatar.
-	detruireFilm(listeFilms, 0);
+	listeFilms.detruireFilm(0);
 	//cout << "le premier film est : " << endl;
 	//afficherFilm(listeFilms.elements[0]);
 
@@ -309,12 +309,12 @@ int main()
 
 	cout << ligneDeSeparation << "Les films sont maintenant:" << endl;
 	//TODO: Afficher la liste des films.
-	afficherListeFilms(listeFilms);
+	listeFilms.afficherListeFilms();
 	//TODO: Faire les appels qui manquent pour avoir 0% de lignes non exécutées dans le programme (aucune ligne rouge dans la couverture de code; c'est normal que les lignes de "new" et "delete" soient jaunes).  Vous avez aussi le droit d'effacer les lignes du programmes qui ne sont pas exécutée, si finalement vous pensez qu'elle ne sont pas utiles.
 	cout << ligneDeSeparation << "Les films sont maintenant:" << endl;
 	afficherFilmographieActeur(listeFilms, "Daniel Craig");
 	//TODO: Détruire tout avant de terminer le programme.  La bibliothèque de verification_allocation devrait afficher "Aucune fuite detectee." a la sortie du programme; il affichera "Fuite detectee:" avec la liste des blocs, s'il manque des delete.
-	detruireListFilm(listeFilms);
+	listeFilms.detruireListFilm();
 	cout << "c fini";
 }
 

@@ -32,11 +32,21 @@ public:
 		return elements_;
 	}
 	
-
+	void operator--(int) {
+		nElements_--;
+	}
 
 	void ajoutFilmDansListe(Film* film);
 
 	void enleverFilm(Film* film);
+
+	void detruireListFilm();
+
+	void detruireFilm(int indexFilm);
+
+	Acteur* trouverActeur(std::string nomActeur);
+
+	void afficherListeFilms() const;
 
 private:
 	int capacite_, nElements_;
