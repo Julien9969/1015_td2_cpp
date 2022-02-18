@@ -218,12 +218,11 @@ void afficherActeur(const Acteur& acteur)
 }
 
 //TODO: Une fonction pour afficher un film avec tous ces acteurs (en utilisant la fonction afficherActeur ci-dessus).
-//[
-void afficherFilm(const Film& film)
+ostream& operator<< (ostream& o, const Film& film)
 {
-	cout << "Titre: " << film.titre << endl;
-	cout << "  Réalisateur: " << film.realisateur << "  Année :" << film.anneeSortie << endl;
-	cout << "  Recette: " << film.recette << "M$" << endl;
+	return o << "Titre: " << film.titre << endl
+	<< "  Réalisateur: " << film.realisateur << "  Année :" << film.anneeSortie << endl
+	<< "  Recette: " << film.recette << "M$" << endl;
 
 	cout << "Acteurs:" << endl;
 	for (const shared_ptr<Acteur> acteur : film.acteurs.spanListeActeurs())
@@ -242,7 +241,7 @@ void afficherListeFilms(const ListeFilms& listeFilms)
 		
 		//TODO: Afficher le film.
 
-		afficherFilm(*film);
+		cout << (*film);
 		
 		cout << ligneDeSeparation;
 	}
@@ -278,14 +277,11 @@ int main()
 	
 	cout << ligneDeSeparation << "Le premier film de la liste est:" << endl;
 	//TODO: Afficher le premier film de la liste.  Devrait être Alien.
-	//[
-	afficherFilm(*listeFilms.enSpan()[0]);
+	cout << (*listeFilms.enSpan()[0]);
 	
 
 	cout << ligneDeSeparation << "Les films sont:" << endl;
 	//TODO: Afficher la liste des films.  Il devrait y en avoir 7.
-	//TODO: Afficher la liste des films.  Il devrait y en avoir 7.
-	//[
 	afficherListeFilms(listeFilms);
 	
 
@@ -301,25 +297,21 @@ int main()
 	
 	
 	//TODO: Détruire et enlever le premier film de la liste (Alien).  Ceci devrait "automatiquement" (par ce que font vos fonctions) détruire les acteurs Tom Skerritt et John Hurt, mais pas Sigourney Weaver puisqu'elle joue aussi dans Avatar.
-	//[
 	detruireFilm(listeFilms.enSpan()[0]);
 	listeFilms.enleverFilm(listeFilms.enSpan()[0]);
 	
 
 	cout << ligneDeSeparation << "Les films sont maintenant:" << endl;
 	//TODO: Afficher la liste des films.
-	//[
 	afficherListeFilms(listeFilms);
 	
 
 	//TODO: Faire les appels qui manquent pour avoir 0% de lignes non exécutées dans le programme (aucune ligne rouge dans la couverture de code; c'est normal que les lignes de "new" et "delete" soient jaunes).  Vous avez aussi le droit d'effacer les lignes du programmes qui ne sont pas exécutée, si finalement vous pensez qu'elle ne sont pas utiles.
-	//[
 	// Les lignes à mettre ici dépendent de comment ils ont fait leurs fonctions.  Dans mon cas:
 	//listeFilms.enleverFilm(nullptr); // Enlever un film qui n'est pas dans la liste (clairement que nullptr n'y est pas).
 	//afficherFilmographieActeur(listeFilms, "N'existe pas"); // Afficher les films d'un acteur qui n'existe pas.
 	
 
 	//TODO: Détruire tout avant de terminer le programme.  L'objet verifierFuitesAllocations devrait afficher "Aucune fuite detectee." a la sortie du programme; il affichera "Fuite detectee:" avec la liste des blocs, s'il manque des delete.
-//[
 
 }

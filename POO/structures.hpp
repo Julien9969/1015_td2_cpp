@@ -40,7 +40,7 @@ public:
 
 	void enleverFilm(Film* film);
 
-	void detruireListFilm();
+	void detruireListFilms();
 
 	void detruireFilm(int indexFilm);
 
