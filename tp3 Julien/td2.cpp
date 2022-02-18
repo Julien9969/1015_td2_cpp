@@ -52,20 +52,20 @@ string lireString(istream& fichier)
 //TODO: Une fonction pour ajouter un Film à une ListeFilms, le film existant déjà; on veut uniquement ajouter le pointeur vers le film existant.  Cette fonction doit doubler la taille du tableau alloué, avec au minimum un élément, dans le cas où la capacité est insuffisante pour ajouter l'élément.  Il faut alors allouer un nouveau tableau plus grand, copier ce qu'il y avait dans l'ancien, et éliminer l'ancien trop petit.  Cette fonction ne doit copier aucun Film ni Acteur, elle doit copier uniquement des pointeurs.
 void ListeFilms::changeDimension(int nouvelleCapacite)
 {
-	Film** nouvelleListe = new Film*[nouvelleCapacite];
+	unique_ptr<shared_ptr<Film>[]> nouvelleListe = make_unique<shared_ptr<Film>[]>(nouvelleCapacite);
 	
 	if (elements != nullptr) {  // Noter que ce test n'est pas nécessaire puique nElements sera zéro si elements est nul, donc la boucle ne tentera pas de faire de copie, et on a le droit de faire delete sur un pointeur nul (ça ne fait rien).
 		nElements = min(nouvelleCapacite, nElements);
 		for (int i : range(nElements))
 			nouvelleListe[i] = elements[i];
-		delete[] elements;
+		//delete[] elements;
 	}
 	
-	elements = nouvelleListe;
+	elements = move(nouvelleListe);
 	capacite = nouvelleCapacite;
 }
 
-void ListeFilms::ajouterFilm(Film* film)
+void ListeFilms::ajouterFilm(shared_ptr<Film> film)
 {
 	if (nElements == capacite)
 		changeDimension(max(1, capacite * 2));
@@ -76,11 +76,11 @@ void ListeFilms::ajouterFilm(Film* film)
 
 //TODO: Une fonction pour enlever un Film d'une ListeFilms (enlever le pointeur) sans effacer le film; la fonction prenant en paramètre un pointeur vers le film à enlever.  L'ordre des films dans la liste n'a pas à être conservé.
 // On a juste fait une version const qui retourne un span non const.  C'est valide puisque c'est la struct qui est const et non ce qu'elle pointe.  Ça ne va peut-être pas bien dans l'idée qu'on ne devrait pas pouvoir modifier une liste const, mais il y aurais alors plusieurs fonctions à écrire en version const et non-const pour que ça fonctionne bien, et ce n'est pas le but du TD (il n'a pas encore vraiment de manière propre en C++ de définir les deux d'un coup).
-span<Film*> ListeFilms::enSpan() const { return span(elements, nElements); }
+span<shared_ptr<Film>> ListeFilms::enSpan() const { return span(elements.get(), nElements); }
 
-void ListeFilms::enleverFilm(const Film* film)
+void ListeFilms::enleverFilm(const shared_ptr<Film> film)
 {
-	for (Film*& element : enSpan()) {  // Doit être une référence au pointeur pour pouvoir le modifier.
+	for (shared_ptr<Film>& element : enSpan()) {  // Doit être une référence au pointeur pour pouvoir le modifier.
 		if (element == film) {
 			if (nElements > 1)
 				element = elements[nElements - 1];
@@ -98,7 +98,7 @@ span<shared_ptr<Acteur>> ListeActeurs::spanListeActeurs() const { return span(el
 //NOTE: Doit retourner un Acteur modifiable, sinon on ne peut pas l'utiliser pour modifier l'acteur tel que demandé dans le main, et on ne veut pas faire écrire deux versions.
 shared_ptr<Acteur> ListeFilms::trouverActeur(const string& nomActeur) const
 {
-	for (const Film* film : enSpan()) {
+	for (const shared_ptr<Film> film : enSpan()) {
 		for (shared_ptr<Acteur> acteur : film->acteurs.spanListeActeurs()) {
 			if (acteur->nom == nomActeur)
 				return acteur;
@@ -127,9 +127,9 @@ shared_ptr<Acteur> lireActeur(istream& fichier, ListeFilms& listeFilms)
 	return {}; //TODO: Retourner un pointeur soit vers un acteur existant ou un nouvel acteur ayant les bonnes informations, selon si l'acteur existait déjà.  Pour fins de débogage, affichez les noms des acteurs crées; vous ne devriez pas voir le même nom d'acteur affiché deux fois pour la création.
 }
 
-Film* lireFilm(istream& fichier, ListeFilms& listeFilms)
+shared_ptr<Film> lireFilm(istream& fichier, ListeFilms& listeFilms)
 {
-	Film* film = new Film;
+	shared_ptr<Film> film = make_shared<Film>();
 	film->titre       = lireString(fichier);
 	film->realisateur = lireString(fichier);
 	film->anneeSortie = lireUint16 (fichier);
@@ -141,9 +141,7 @@ Film* lireFilm(istream& fichier, ListeFilms& listeFilms)
 	//filmp->acteurs.elements = new Acteur*[filmp->acteurs.nElements];
 	
 	for (shared_ptr<Acteur>& acteur : film->acteurs.spanListeActeurs()) {
-		acteur = 
-		
-		lireActeur(fichier, listeFilms); //TODO: Placer l'acteur au bon endroit dans les acteurs du film.
+		acteur = lireActeur(fichier, listeFilms); //TODO: Placer l'acteur au bon endroit dans les acteurs du film.
 		//TODO: Ajouter le film à la liste des films dans lesquels l'acteur joue.
 
 		//acteur->joueDans.ajouterFilm(film);
@@ -185,7 +183,7 @@ bool joueEncore(const Acteur* acteur)
 }
 */
 
-void detruireFilm(Film* film)
+void detruireFilm(shared_ptr<Film> film)
 {
 
 	//for (shared_ptr<Acteur> acteur : film->acteurs.spanListeActeurs()) {
@@ -196,7 +194,7 @@ void detruireFilm(Film* film)
 
 	cout << "Destruction Film " << film->titre << endl;
 	//delete[] film->acteurs.elements;
-	delete film;
+	//delete film;
 }
 
 
@@ -206,9 +204,9 @@ void detruireFilm(Film* film)
 ListeFilms::~ListeFilms()
 {
 	if (possedeLesFilms_)
-		for (Film* film : enSpan())
+		for (shared_ptr<Film> film : enSpan())
 			detruireFilm(film);
-	delete[] elements;
+	//delete[] elements;
 }
 
 
@@ -237,7 +235,7 @@ void afficherListeFilms(const ListeFilms& listeFilms)
 	
 	cout << ligneDeSeparation;
 	
-	for (const Film* film : listeFilms.enSpan()) {
+	for (const shared_ptr<Film> film : listeFilms.enSpan()) {
 		
 		//TODO: Afficher le film.
 
@@ -286,7 +284,7 @@ int main()
 	
 
 	//TODO: Modifier l'année de naissance de Benedict Cumberbatch pour être 1976 (elle était 0 dans les données lues du fichier).  Vous ne pouvez pas supposer l'ordre des films et des acteurs dans les listes, il faut y aller par son nom.
-	//[
+
 	listeFilms.trouverActeur("Benedict Cumberbatch")->anneeNaissance = 1976;
 	
 
@@ -294,7 +292,11 @@ int main()
 	//TODO: Afficher la liste des films où Benedict Cumberbatch joue.  Il devrait y avoir Le Hobbit et Le jeu de l'imitation.
 	
 	//afficherFilmographieActeur(listeFilms, "Benedict Cumberbatch");
-	
+	shared_ptr<Film> skylen = listeFilms[0];
+	skylen->titre = "Skylien";
+	skylen->acteurs[0] = listeFilms[1]->acteurs[0];
+	skylen->acteurs[0]->nom = "Daniel Wroughton Craig";
+	cout << *skylen << *listeFilms[0] << *listeFilms[1];
 	
 	//TODO: Détruire et enlever le premier film de la liste (Alien).  Ceci devrait "automatiquement" (par ce que font vos fonctions) détruire les acteurs Tom Skerritt et John Hurt, mais pas Sigourney Weaver puisqu'elle joue aussi dans Avatar.
 	detruireFilm(listeFilms.enSpan()[0]);
