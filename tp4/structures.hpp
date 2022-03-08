@@ -13,6 +13,7 @@ using namespace std;
 
 struct Film; struct Acteur; // Permet d'utiliser les types alors qu'ils seront défini après.
 
+
 class ListeFilms {
 public:
 	ListeFilms() = default;
@@ -73,11 +74,40 @@ private:
 };
 using ListeActeurs = Liste<Acteur>;
 
-struct Film
+
+class Item {
+
+public:
+	Item(string titre, int anneeSortie) : titre_(titre) , anneeSortie_(anneeSortie) {}
+
+protected:
+	string titre_;
+	int anneeSortie_;
+
+};
+
+
+class Film : public Item
 {
-	string titre, realisateur; // Titre et nom du réalisateur (on suppose qu'il n'y a qu'un réalisateur).
-	int anneeSortie=0, recette=0; // Année de sortie et recette globale du film en millions de dollars
-	ListeActeurs acteurs;
+public:
+	Film() = default;
+	Film(string titre, string realisateur, int anneeSortie, int recette) : Item(titre, anneeSortie), realisateur_(realisateur), recette_(recette) {}
+protected:
+	string realisateur_; // Titre et nom du réalisateur (on suppose qu'il n'y a qu'un réalisateur).
+	int recette_=0; // Année de sortie et recette globale du film en millions de dollars
+	ListeActeurs acteurs_;
+
+};
+
+class Livre : public Item 
+{
+public:
+
+
+protected:
+	string auteur_;
+	int nCopieVendues_, nPages_;
+
 };
 
 struct Acteur
