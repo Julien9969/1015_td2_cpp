@@ -13,7 +13,6 @@ using namespace std;
 
 struct Film; struct Acteur; // Permet d'utiliser les types alors qu'ils seront défini après.
 
-
 class ListeFilms {
 public:
 	ListeFilms() = default;
@@ -74,15 +73,16 @@ private:
 };
 using ListeActeurs = Liste<Acteur>;
 
-
-class Item {
-
+class Item
+{
 public:
-	Item(string titre, int anneeSortie) : titre_(titre) , anneeSortie_(anneeSortie) {}
+	string& modifierTitre() { return titre_; }
+	const string& lireTitre() const { return titre_; }
 
 protected:
+	Item(string titre, int annee) : titre_(titre), anneeSortie_(annee) {}
 	string titre_;
-	int anneeSortie_;
+	int anneeSortie_ = 0;
 
 };
 
@@ -90,23 +90,34 @@ protected:
 class Film : public Item
 {
 public:
-	Film() = default;
-	Film(string titre, string realisateur, int anneeSortie, int recette) : Item(titre, anneeSortie), realisateur_(realisateur), recette_(recette) {}
+	Film(string titre, int annee, string realisateur, int recette, int nActeurs) : Item(titre, annee), realisateur_(realisateur), recette_(recette) {
+		acteurs_ = ListeActeurs(nActeurs);
+	}
+
+	friend ostream& operator<< (ostream& os, const Film& film);
+	const ListeActeurs& lireActeurs() const { return acteurs_; }
+	ListeActeurs& getActeurs() { return acteurs_; }
+
+	const int lireRecette() const { return recette_; }
+
 protected:
 	string realisateur_; // Titre et nom du réalisateur (on suppose qu'il n'y a qu'un réalisateur).
-	int recette_=0; // Année de sortie et recette globale du film en millions de dollars
+	int recette_ = 0; // Année de sortie et recette globale du film en millions de dollars
 	ListeActeurs acteurs_;
 
 };
 
-class Livre : public Item 
+class Livre : public Item
 {
 public:
 
-
 protected:
 	string auteur_;
-	int nCopieVendues_, nPages_;
+	int nCopies_;
+	int nPages_;
+
+
+
 
 };
 

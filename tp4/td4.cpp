@@ -101,7 +101,7 @@ void ListeFilms::enleverFilm(const Film* film)
 shared_ptr<Acteur> ListeFilms::trouverActeur(const string& nomActeur) const
 {
 	for (const Film* film : enSpan()) {
-		for (const shared_ptr<Acteur>& acteur : film->acteurs.enSpan()) {
+		for (const shared_ptr<Acteur>& acteur : film->lireActeurs().enSpan()) {
 			if (acteur->nom == nomActeur)
 				return acteur;
 		}
@@ -130,17 +130,26 @@ shared_ptr<Acteur> lireActeur(istream& fichier, const ListeFilms& listeFilms)
 
 Film* lireFilm(istream& fichier, ListeFilms& listeFilms)
 {
-	Film* film = new Film;
-	film->titre       = lireString(fichier);
+	/*film->titre = lireString(fichier);
 	film->realisateur = lireString(fichier);
 	film->anneeSortie = lireUint16 (fichier);
 	film->recette     = lireUint16 (fichier);
 	auto nActeurs = lireUint8 (fichier);
-	film->acteurs = ListeActeurs(nActeurs);  // On n'a pas fait de méthode pour changer la taille d'allocation, seulement un constructeur qui prend la capacité.  Pour que cette affectation fonctionne, il faut s'assurer qu'on a un operator= de move pour ListeActeurs.
-	cout << "Création Film " << film->titre << endl;
+	film->acteurs = ListeActeurs(nActeurs);*/ // On n'a pas fait de méthode pour changer la taille d'allocation, seulement un constructeur qui prend la capacité.  Pour que cette affectation fonctionne, il faut s'assurer qu'on a un operator= de move pour ListeActeurs.
+	
+	string titre = lireString(fichier);
+	string realisateur = lireString(fichier);
+	int anneeSortie = lireUint16(fichier);
+	int recette = lireUint16(fichier);
+	auto nActeurs = lireUint8(fichier);
+	//ListeActeurs acteurs = ListeActeurs(nActeurs);
+
+	Film* film = new Film(titre, anneeSortie, realisateur, recette, nActeurs );
+	
+	cout << "Création Film " << film->lireTitre() << endl;
 
 	for ([[maybe_unused]] auto i : range(nActeurs)) {  // On peut aussi mettre nElements_ avant et faire un span, comme on le faisait au TD précédent.
-		film->acteurs.ajouter(lireActeur(fichier, listeFilms));
+		film->getActeurs().ajouter(lireActeur(fichier, listeFilms));
 	}
 
 	return film;
@@ -183,12 +192,12 @@ ostream& operator<< (ostream& os, const Acteur& acteur)
 //[
 ostream& operator<< (ostream& os, const Film& film)
 {
-	os << "Titre: " << film.titre << endl;
-	os << "  Réalisateur: " << film.realisateur << "  Année :" << film.anneeSortie << endl;
-	os << "  Recette: " << film.recette << "M$" << endl;
+	os << "Titre: " << film.titre_ << endl;
+	os << "  Réalisateur: " << film.realisateur_ << "  Année :" << film.anneeSortie_ << endl;
+	os << "  Recette: " << film.recette_ << "M$" << endl;
 
 	os << "Acteurs:" << endl;
-	for (const shared_ptr<Acteur>& acteur : film.acteurs.enSpan())
+	for (const shared_ptr<Acteur>& acteur : film.acteurs_.enSpan())
 		os << *acteur;
 	return os;
 }
@@ -244,19 +253,19 @@ int main()
 	// Tests chapitres 7-8:
 	// Les opérations suivantes fonctionnent.
 	Film skylien = *listeFilms[0];
-	skylien.titre = "Skylien";
-	skylien.acteurs[0] = listeFilms[1]->acteurs[0];
-	skylien.acteurs[0]->nom = "Daniel Wroughton Craig";
+	skylien.modifierTitre() = "Skylien";
+	skylien.lireActeurs()[0] = listeFilms[1]->lireActeurs()[0];
+	skylien.lireActeurs()[0]->nom = "Daniel Wroughton Craig";
 	cout << ligneDeSeparation
 		<< "Les films copiés/modifiés, sont:\n"
 		<< skylien << *listeFilms[0] << *listeFilms[1] << ligneDeSeparation;
-	assert(skylien.acteurs[0]->nom == listeFilms[1]->acteurs[0]->nom);
-	assert(skylien.acteurs[0]->nom != listeFilms[0]->acteurs[0]->nom);
-
+	assert(skylien.lireActeurs()[0]->nom == listeFilms[1]->lireActeurs()[0]->nom);
+	assert(skylien.lireActeurs()[0]->nom != listeFilms[0]->lireActeurs()[0]->nom);
+	
 	// Tests chapitre 10:
-	auto film955 = listeFilms.trouver([](const auto& f) { return f.recette == 955; });
+	auto film955 = listeFilms.trouver([](const auto& f) { return f.lireRecette() == 955; });
 	cout << "\nFilm de 955M$:\n" << *film955;
-	assert(film955->titre == "Le Hobbit : La Bataille des Cinq Armées");
+	assert(film955->lireTitre() == "Le Hobbit : La Bataille des Cinq Armées");
 	assert(listeFilms.trouver([](const auto&) { return false; }) == nullptr); // Pour la couveture de code: chercher avec un critère toujours faux ne devrait pas trouver.
 
 	// Tests chapitre 9:
@@ -287,7 +296,3 @@ int main()
 	// Détruire tout avant de terminer le programme.
 	listeFilms.detruire(true);
 }
-
-
-// aiguillage dinamic = allocation et methode virtuelle
-// vector<item*>   Diamant ->heriatge virtuel
