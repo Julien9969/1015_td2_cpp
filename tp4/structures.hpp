@@ -73,37 +73,27 @@ private:
 };
 using ListeActeurs = Liste<Acteur>;
 
-class Item
+class Item 
 {
 public:
-	string& modifierTitre() { return titre_; }
-	const string& lireTitre() const { return titre_; }
+	string titre;
+	int anneeSortie;
+
 
 protected:
-	Item(string titre, int annee) : titre_(titre), anneeSortie_(annee) {}
-	string titre_;
-	int anneeSortie_ = 0;
+
 
 };
-
 
 class Film : public Item
 {
 public:
-	Film(string titre, int annee, string realisateur, int recette, int nActeurs) : Item(titre, annee), realisateur_(realisateur), recette_(recette) {
-		acteurs_ = ListeActeurs(nActeurs);
-	}
 
-	friend ostream& operator<< (ostream& os, const Film& film);
-	const ListeActeurs& lireActeurs() const { return acteurs_; }
-	ListeActeurs& getActeurs() { return acteurs_; }
-
-	const int lireRecette() const { return recette_; }
+	string realisateur; // Titre et nom du réalisateur (on suppose qu'il n'y a qu'un réalisateur).
+	int recette=0; // Année de sortie et recette globale du film en millions de dollars
+	ListeActeurs acteurs;
 
 protected:
-	string realisateur_; // Titre et nom du réalisateur (on suppose qu'il n'y a qu'un réalisateur).
-	int recette_ = 0; // Année de sortie et recette globale du film en millions de dollars
-	ListeActeurs acteurs_;
 
 };
 
@@ -117,9 +107,8 @@ protected:
 	int nPages_;
 
 
-
-
 };
+
 
 struct Acteur
 {
